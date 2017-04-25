@@ -359,7 +359,7 @@ Resources:
 
   AgentLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
-    Properties: &launchConfiguration
+    Properties:
       SecurityGroups: [ !If [ "CreateSecurityGroup", $(SecurityGroup), $(SecurityGroupId) ] ]
       KeyName : $(KeyName)
       IamInstanceProfile: $(IAMInstanceProfile)
@@ -515,6 +515,17 @@ Resources:
         AllocationStrategy: lowestPrice
         TargetCapacity: !Ref MinSize
         LaunchSpecifications:
-          - <<: *launchConfiguration
-            InstanceType:  c3.large
-            SubnetId: !Join [ ',', !If [ "CreateVpcResources", [ $(Subnet0), $(Subnet1) ], $(Subnets) ] ]
+          - InstanceType: m3.medium
+            ImageId: !If [
+              "UseDefaultAMI",
+              "$(AWSRegion2AMI[$(AWS::Region)][AMI])",
+              $(ImageId)
+            ]
+            SubnetId: !If [
+              "CreateVpcResources",
+              [ $(Subnet0), $(Subnet1) ],
+              !Select [ 0, $(Subnets) ]
+            ]
+            WeightedCapacity: '1'
+            SecurityGroups:
+              - !If [ "CreateSecurityGroup", $(SecurityGroup), $(SecurityGroupId) ]
