@@ -3,8 +3,8 @@
 set -eu -o pipefail
 
 echo "Installing dependencies..."
-sudo yum update -y -q
-sudo yum install -y -q git-core
+sudo apt-get update -y
+sudo apt-get install -y git-core
 
 echo "Creating buildkite-agent user..."
 sudo useradd --base-dir /var/lib buildkite-agent
@@ -54,7 +54,7 @@ sudo mkdir -p /var/lib/buildkite-agent/plugins
 sudo chown -R buildkite-agent: /var/lib/buildkite-agent/plugins
 
 echo "Adding init.d template..."
-sudo cp /tmp/conf/buildkite-agent/init.d/buildkite-agent /etc/buildkite-agent/init.d.tmpl
+sudo cp /tmp/conf/buildkite-agent/systemd/buildkite-agent /etc/buildkite-agent/systemd.tmpl
 
 echo "Adding termination script..."
 sudo cp /tmp/conf/buildkite-agent/scripts/stop-agent-gracefully /usr/local/bin/stop-agent-gracefully

@@ -3,8 +3,8 @@
 set -eu -o pipefail
 
 echo "Installing awslogs..."
-sudo yum update -y -q
-sudo yum install -y awslogs
+sudo apt-get update update -y
+sudo apt-get install -y awslogs
 
 echo "Adding awslogs config..."
 

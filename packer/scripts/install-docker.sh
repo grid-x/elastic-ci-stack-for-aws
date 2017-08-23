@@ -9,22 +9,24 @@ DOCKER_COMPOSE_VERSION=1.14.0
 
 echo "Installing docker..."
 
-# Only dep to install (found by doing a yum install of 1.11)
-sudo yum install -y xfsprogs
+sudo apt-get update -y
+sudo apt-get install -y \
+     apt-transport-https \
+     ca-certificates \
+     curl \
+     software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo apt-key fingerprint 0EBFCD88
+sudo add-apt-repository -y \
+     "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+sudo apt-get update -y
+sudo apt-get install -y docker-ce
 
 # Add docker group
-sudo groupadd docker
-sudo usermod -a -G docker ec2-user
+sudo usermod -a -G docker ubuntu
 
-# Manual install ala https://docs.docker.com/engine/installation/binaries/
-curl -Lsf https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz > docker.tgz
-tar -xvzf docker.tgz
-sudo mv docker/* /usr/bin
-rm docker.tgz
-
-sudo cp /tmp/conf/docker/init.d/docker /etc/init.d/docker
-sudo cp /tmp/conf/docker/docker.conf /etc/sysconfig/docker
-sudo chkconfig docker on
 
 echo "Downloading docker-compose..."
 sudo curl -Lsf -o /usr/bin/docker-compose https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Linux-x86_64
@@ -40,4 +42,3 @@ echo "Downloading jq..."
 sudo curl -Lsf -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
 sudo chmod +x /usr/bin/jq
 jq --version
-

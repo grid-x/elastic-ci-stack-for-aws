@@ -32,7 +32,7 @@ build-ami: config.json
 		-v ${HOME}/.aws:/root/.aws \
 		--rm -v "$(PWD):/src" -w /src/packer hashicorp/packer:light \
 			build buildkite-ami.json | tee packer.output
-	jq --arg ImageId $$(grep -Eo 'us-east-1: (ami-.+)' packer.output | cut -d' ' -f2) \
+	jq --arg ImageId $$(grep -Eo 'eu-central-1: (ami-.+)' packer.output | cut -d' ' -f2) \
 		'[ .[] | select(.ParameterKey != "ImageId") ] + [{ParameterKey: "ImageId", ParameterValue: $$ImageId}]' \
 		config.json  > config.json.temp
 	mv config.json.temp config.json

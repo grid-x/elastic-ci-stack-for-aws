@@ -1,7 +1,9 @@
 #!/bin/bash
-set -euo pipefail
+set -eo pipefail
 
 ## Installs the Buildkite Agent, run from the CloudFormation template
+
+export PYTHONPATH=/usr/local/lib/python3.5/dist-packages/:$PYTHONPATH
 
 exec > /var/log/elastic-stack.log 2>&1 # Logs to elastic-stack.log
 
@@ -9,7 +11,7 @@ on_error() {
 	local exitCode="$?"
 	local errorLine="$1"
 
-	/opt/aws/bin/cfn-signal \
+	/usr/local/bin/cfn-signal \
 		--region "$AWS_REGION" \
 		--stack "$BUILDKITE_STACK_NAME" \
 		--reason "Error on line $errorLine: $(tail -n 1 /var/log/elastic-stack.log)" \
@@ -23,17 +25,14 @@ INSTANCE_ID=$(/opt/aws/bin/ec2-metadata --instance-id | cut -d " " -f 2)
 DOCKER_VERSION=$(docker --version | cut -f3 -d' ' | sed 's/,//')
 
 # Cloudwatch logs needs a region specifically configured
-cat << EOF > /etc/awslogs/awscli.conf
-[plugins]
-cwlogs = cwlogs
-[default]
-region = $AWS_REGION
-EOF
+#cat << EOF > /etc/awslogs/awscli.conf
+#[plugins]
+#cwlogs = cwlogs
+#[default]
+#region = $AWS_REGION
+#EOF
 
-PLUGINS_ENABLED=()
-[[ $SECRETS_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("secrets")
-[[ $ECR_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("ecr")
-[[ $DOCKER_LOGIN_PLUGIN_ENABLED == "true" ]] && PLUGINS_ENABLED+=("docker-login")
+PLUGINS_ENABLED="secrets ecr docker-login"
 
 # cfn-env is sourced by the environment hook in builds
 cat << EOF > /var/lib/buildkite-agent/cfn-env
@@ -83,13 +82,13 @@ for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
 	touch "/var/log/buildkite-agent-${i}.log"
 
 	# Setup logging first so we capture everything
-	cat <<- EOF > "/etc/awslogs/config/buildkite-agent-${i}.conf"
-	[/var/log/buildkite-agent-${i}.log]
-	file = /var/log/buildkite-agent-${i}.log
-	log_group_name = /var/log/buildkite-agent.log
-	log_stream_name = {instance_id}-${i}
-	datetime_format = %Y-%m-%d %H:%M:%S
-	EOF
+	#cat <<- EOF > "/etc/awslogs/config/buildkite-agent-${i}.conf"
+	#[/var/log/buildkite-agent-${i}.log]
+	#file = /var/log/buildkite-agent-${i}.log
+	#log_group_name = /var/log/buildkite-agent.log
+	#log_stream_name = {instance_id}-${i}
+	#datetime_format = %Y-%m-%d %H:%M:%S
+	#EOF
 done
 
 if [[ -n "${BUILDKITE_AUTHORIZED_USERS_URL}" ]] ; then
@@ -117,8 +116,8 @@ LIFECYCLED_HANDLER=/usr/local/bin/stop-agent-gracefully
 EOF
 
 # my kingdom for a decent init system
-start lifecycled || true
-service awslogs restart || true
+systemctl start lifecycled
+#service awslogs restart || true
 
 # wait for docker to start
 next_wait_time=0
@@ -127,12 +126,15 @@ until docker ps || [ $next_wait_time -eq 5 ]; do
 done
 
 for i in $(seq 1 "${BUILDKITE_AGENTS_PER_INSTANCE}"); do
-	cp /etc/buildkite-agent/init.d.tmpl "/etc/init.d/buildkite-agent-${i}"
-	service "buildkite-agent-${i}" start
-	chkconfig --add "buildkite-agent-${i}"
+	cp /etc/buildkite-agent/systemd.tmpl "/lib/systemd/system/buildkite-agent-${i}.service"
+	systemctl enable "buildkite-agent-${i}"
+	systemctl start "buildkite-agent-${i}"
 done
 
-/opt/aws/bin/cfn-signal \
+sudo mkdir -p /var/lib/buildkite-agent/.ssh
+sudo chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent
+
+/usr/local/bin/cfn-signal \
 	--region "$AWS_REGION" \
 	--stack "$BUILDKITE_STACK_NAME" \
 	--resource "AgentAutoScaleGroup" \
