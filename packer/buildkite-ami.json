@@ -39,6 +39,10 @@
     {
       "type": "shell",
       "script": "scripts/install-buildkite-agent.sh"
+    },
+    {
+      "type": "shell",
+      "script": "scripts/install-dnsmasq.sh"
     }
   ]
 }
