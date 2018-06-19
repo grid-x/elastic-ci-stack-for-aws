@@ -3,12 +3,12 @@
     {
       "type": "amazon-ebs",
       "region": "eu-central-1",
-      "source_ami": "ami-1e339e71",
+      "source_ami": "ami-c7e0c82c",
       "instance_type": "i3.large",
       "spot_price": "auto",
       "spot_price_auto_product": "Linux/UNIX (Amazon VPC)",
       "ssh_username": "ubuntu",
-      "ami_name": "buildkite-stack-{{isotime | clean_ami_name}}",
+      "ami_name": "buildkite-stack-ubuntu-docker-{{isotime | clean_ami_name}}",
       "ami_description": "Buildkite CloudFormation Stack base image (Amazon Linux, buildkite-agent, docker, docker-compose, docker-gc, jq)",
       "ami_groups": ["all"]
     }
