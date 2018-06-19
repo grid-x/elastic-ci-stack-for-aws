@@ -2,7 +2,9 @@
 set -eu -o pipefail
 
 echo "Updating package resources"
-sudo apt-get update -y && sudo apt-get upgrade -y
+sudo apt-get update -y
+sudo apt-mark hold grub-legacy-ec2
+sudo apt-get upgrade -y
 
 echo "Instaling python-pip"
 sudo apt-get install -y python-pip python3-pip awscli
