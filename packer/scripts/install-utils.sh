@@ -7,7 +7,11 @@ sudo apt-mark hold grub-legacy-ec2
 sudo apt-get upgrade -y
 
 echo "Instaling python-pip"
-sudo apt-get install -y python-pip python3-pip awscli
+sudo apt-get install -y python-pip python3-pip
+
+echo "Instaling aws"
+sudo pip install --upgrade pip awscli
+sudo ln -s /usr/local/bin/aws /usr/bin/aws
 
 echo "Installing zip utils and curl"
 sudo apt-get install -y zip unzip curl
