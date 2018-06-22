@@ -11,6 +11,8 @@ echo "Installing docker..."
 
 sudo apt-get update -y
 sudo apt-get install -y \
+     linux-image-extra-virtual \
+     aufs-tools \
      apt-transport-https \
      ca-certificates \
      curl \
